@@ -20,6 +20,44 @@ class ArXivCollector:
     def _get_text(self, element, xpath):
         found = element.find(xpath)
         return found.text.strip() if found is not None and found.text else ""
+ 
+    def remove_latex_commands(text: str) -> str:
+        keep_arguments = {"textit": True, "underline": True}
+    
+        lines = text.splitlines(keepends=True)
+        cleaned_lines = []
+    
+        for line in lines:
+            # https://regex-vis.com/?r=%5C%5C%28.*%3F%29%5C%7B%28.*%3F%29%5C%7D%7C%5C%24%28.*%3F%29%5C%24
+            while re.search(r"\\(.*?)\{(.*?)\}|\$(.*?)\$", line):
+                match = re.search(r"\\(.*?)\{(.*?)\}|\$(.*?)\$", line)
+                if match:
+                    cmd = match.group(1)
+                    arg = match.group(2)
+                    math = match.group(3)
+                    if math != None:
+                        line = re.sub(
+                            r"\$(.*?)\$", "", line, count=1
+                        )
+                        continue
+                    if keep_arguments.get(cmd, False):
+                        line = re.sub(
+                            r"\\%s{%s}" % (re.escape(cmd), re.escape(arg)),
+                            arg,
+                            line,
+                            count=1,
+                        )
+                    else:
+                        line = re.sub(
+                            r"\\%s{.*?}" % re.escape(cmd), "", line, count=1
+                        )
+                else:
+                    break
+    
+            cleaned_lines.append(line)
+    
+        return "".join(cleaned_lines)
+
     def clean_text(self, text):
         if not text: return ""
         text = re.sub(r'(https?://[^\s]+|arxiv:\d+\.\d+)', ' ', text)
@@ -29,7 +67,7 @@ class ArXivCollector:
         if not text: return ""
         tokens = word_tokenize(text.lower())
         words = [self.lemmatizer.lemmatize(word) for word in tokens
-                if word.isalpha() and word not in self.stopwords and len(word) > 2]
+                 if word.isalpha() and word not in self.stopwords and len(word) > 2]
         return "; ".join([word for word, count in Counter(words).most_common(num)])
     def fetch_papers(self, max_papers=50000, categories=['cs.AI']):
         self.data.clear()
@@ -61,11 +99,11 @@ class ArXivCollector:
                         if paper_id in self.collected_ids: 
                             continue 
                         self.data.append({'id': paper_id,'original_title': self._get_text(entry, '{http://www.w3.org/2005/Atom}title'),'clean_title': self.clean_text(self._get_text(entry, '{http://www.w3.org/2005/Atom}title')),
-                            'original_abstract': self._get_text(entry, '{http://www.w3.org/2005/Atom}summary'),'clean_abstract': self.clean_text(self._get_text(entry, '{http://www.w3.org/2005/Atom}summary')),
-                            'keywords': self.extract_keywords(self.clean_text(self._get_text(entry, '{http://www.w3.org/2005/Atom}title') + " " + self._get_text(entry, '{http://www.w3.org/2005/Atom}summary'))),
-                            'authors': '; '.join([self._get_text(auth, '{http://www.w3.org/2005/Atom}name') for auth in entry.findall('{http://www.w3.org/2005/Atom}author')]),
-                            'published': self._get_text(entry, '{http://www.w3.org/2005/Atom}published')[:10],
-                            'category': category,'arxiv_url': f"https://arxiv.org/abs/{paper_id}",'pdf_url': f"https://arxiv.org/pdf/{paper_id}.pdf"})
+                                          'original_abstract': self._get_text(entry, '{http://www.w3.org/2005/Atom}summary'),'clean_abstract': self.clean_text(self._get_text(entry, '{http://www.w3.org/2005/Atom}summary')),
+                                          'keywords': self.extract_keywords(self.clean_text(self._get_text(entry, '{http://www.w3.org/2005/Atom}title') + " " + self._get_text(entry, '{http://www.w3.org/2005/Atom}summary'))),
+                                          'authors': '; '.join([self._get_text(auth, '{http://www.w3.org/2005/Atom}name') for auth in entry.findall('{http://www.w3.org/2005/Atom}author')]),
+                                          'published': self._get_text(entry, '{http://www.w3.org/2005/Atom}published')[:10],
+                                          'category': category,'arxiv_url': f"https://arxiv.org/abs/{paper_id}",'pdf_url': f"https://arxiv.org/pdf/{paper_id}.pdf"})
                         self.collected_ids.add(paper_id)
                         collected_in_batch += 1
                         category_counts[category] += 1 
@@ -82,7 +120,7 @@ class ArXivCollector:
 def main():
     collector = ArXivCollector()
     df = collector.fetch_papers(max_papers=50000, categories=["cs.AI", "cs.AR", "cs.CC", "cs.CE", "cs.CG", "cs.CL", "cs.CR", "cs.CV", "cs.CY", "cs.DB", "cs.DC", "cs.DL", "cs.DM", "cs.DS", "cs.ET", "cs.FL", "cs.GR", "cs.GT", "cs.HC",
-                     "cs.IR", "cs.IT", "cs.LG", "cs.LO", "cs.MA", "cs.MM", "cs.MS", "cs.NA", "cs.NE", "cs.NI", "cs.OS", "cs.PF", "cs.PL", "cs.RO", "cs.SC", "cs.SD", "cs.SE", "cs.SI", "cs.SY","cs.GL","cs.OH"])
+                                                              "cs.IR", "cs.IT", "cs.LG", "cs.LO", "cs.MA", "cs.MM", "cs.MS", "cs.NA", "cs.NE", "cs.NI", "cs.OS", "cs.PF", "cs.PL", "cs.RO", "cs.SC", "cs.SD", "cs.SE", "cs.SI", "cs.SY","cs.GL","cs.OH"])
     collector.save_data(df)
 if __name__ == "__main__":
     main()
