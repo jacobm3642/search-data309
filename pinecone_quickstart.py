@@ -10,6 +10,7 @@ def get_env_parameter(key: str) -> str:
             if line[0].strip() == key:
                 return line[1].strip()
     print(f"key \"{key}\" not found in .env")
+    return None
 
 
 get_env_parameter(3)
