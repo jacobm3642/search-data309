@@ -62,7 +62,7 @@ for category in categories:
     if len(papers) >= 50000:
         break
     print(f"{category}, have collected: {len(papers)}")
-    search = arxiv.Search(query=f'cat:{category}', max_results=min(4010, 50000 - len(papers)), sort_by=arxiv.SortCriterion.SubmittedDate)
+    search = arxiv.Search(query=f'cat:{category}', max_results=min(4500, 50000 - len(papers)), sort_by=arxiv.SortCriterion.SubmittedDate)
 
     try:
         for paper in client.results(search):
