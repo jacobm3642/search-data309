@@ -62,7 +62,7 @@ for category in categories:
     if len(papers) >= 50000:
         break
     print(f"{category}, have collected: {len(papers)}")
-    search = arxiv.Search(query=f'cat:{category}', max_results=min(1500, 50000 - len(papers)), sort_by=arxiv.SortCriterion.SubmittedDate)
+    search = arxiv.Search(query=f'cat:{category}', max_results=min(4010, 50000 - len(papers)), sort_by=arxiv.SortCriterion.SubmittedDate)
 
     try:
         for paper in client.results(search):
@@ -74,11 +74,9 @@ for category in categories:
             collected_titles.add(title_clean)
             abstract_clean = remove_urls(remove_latex_commands(paper.summary)).lower()
             keywords = sorted(set(extract_keywords(title_clean) + extract_keywords(abstract_clean)))
-            papers.append({
-                'title_original': paper.title, 'title_cleaned': title_clean, 'abstract_original': paper.summary, 'abstract_cleaned': abstract_clean,
+            papers.append({'title_original': paper.title, 'title_cleaned': title_clean, 'abstract_original': paper.summary, 'abstract_cleaned': abstract_clean,
                 'keywords': ', '.join(keywords), 'arxiv_url': paper.entry_id, 'pdf_url': paper.pdf_url,
-                'category': paper.categories[0] if paper.categories else category, 'published': str(paper.published.date()) if paper.published else ''
-            })
+                'category': paper.categories[0] if paper.categories else category, 'published': str(paper.published.date()) if paper.published else ''})
     except Exception as e:
         time.sleep(5)
 
