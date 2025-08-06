@@ -3,12 +3,6 @@
   pkgs.mkShell {
       buildInputs = with pkgs; [
         python3
+        (python3.withPackages(ps: with ps; [ pandas requests nltk flask pinecone]))
       ];
-
-      shellHook = ''
-        if [ ! -d venv ]; then
-          python3 -m venv venv
-        fi
-        source venv/bin/activate
-      '';
   }

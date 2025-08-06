@@ -25,4 +25,8 @@ function check_post_route(route) {
     POST_wrapper(route, JSON.stringify("hello there"), x => alert(x), (x, y) => alert(y.responseText));
 }
 
+function add_p(text) {
+  $.("#body").innerHTML = "hello";
+}
+
 
