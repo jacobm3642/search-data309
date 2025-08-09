@@ -12,11 +12,6 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     return response
 
-
-@app.route("/")
-def index():
-    return flask.render_template("index.html")
-
 @app.route("/repeat", methods=['POST'])
 def repeat():
     data = flask.request.get_json()

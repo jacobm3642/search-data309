@@ -12,9 +12,6 @@ def get_env_parameter(key: str) -> str:
     print(f"key \"{key}\" not found in .env")
     return None
 
-
-get_env_parameter(3)
-
 pc = Pinecone(api_key=get_env_parameter("pinecone_api"))
 
 index_name = "developer-quickstart-py"

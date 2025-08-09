@@ -9,38 +9,49 @@ def remove_urls(text):
 
 def remove_latex_commands(text: str) -> str:
     """Removes LaTeX commands and math environments from the text.Keeps arguments for specific commands like 'textit' and 'underline'."""
-    keep_arguments = {"textit": True, "underline": True}
+    keep_arguments = {"textit": True, "underline": True, "textbf": True}
+
+    def strip_simple_frac(s: str) -> str:
+        prev = None
+        pattern = re.compile(r"\\frac\{[^{}]*\}\{[^{}]*\}")
+        while prev != s:
+            prev = s
+            s = pattern.sub("", s)
+        return s
+
+    def simplify_math_simple_cmds(s: str) -> str:
+        s = re.sub(r"\\([A-Za-z]+)(?!\s*\{)", r"\1", s)
+        s = re.sub(r"\\([^\w\s\{])", r"\1", s)
+        return s
 
     lines = text.splitlines(keepends=True)
     cleaned_lines = []
 
     for line in lines:
-        # https://regex-vis.com/?r=%5C%5C%28.*%3F%29%5C%7B%28.*%3F%29%5C%7D%7C%5C%24%28.*%3F%29%5C%24
+        line = strip_simple_frac(line)
+
         while re.search(r"\\(.*?)\{(.*?)\}|\$(.*?)\$", line):
             match = re.search(r"\\(.*?)\{(.*?)\}|\$(.*?)\$", line)
             if match:
-                cmd = match.group(1) # Command name (e.g., 'textit')
-                arg = match.group(2) # Argument of the command
-                math = match.group(3) # Content within $...$
-
+                cmd = match.group(1)
+                arg = match.group(2)
+                math = match.group(3)
                 if math is not None:
-                    line = re.sub(
-                        r"\$(.*?)\$", "", line, count=1
-                    )
+                    math_processed = strip_simple_frac(math)
+                    math_processed = simplify_math_simple_cmds(math_processed)
+                    line = re.sub(r"\$(.*?)\$", math_processed, line, count=1)
                     continue
-
-                if cmd is not None:
-                    if keep_arguments.get(cmd, False):
-                        line = re.sub(
-                            r"\\%s{%s}" % (re.escape(cmd), re.escape(arg)),
-                            arg,
-                            line,
-                            count=1,
-                        )
-                    else:
-                        line = re.sub(
-                            r"\\%s{.*?}" % re.escape(cmd), "", line, count=1
-                        )
+                if keep_arguments.get(cmd, False):
+                    line = re.sub(
+                        r"\\%s{%s}" % (re.escape(cmd), re.escape(arg)),
+                        arg,
+                        line,
+                        count=1,
+                    )
+                else:
+                    line = re.sub(
+                        r"\\%s{.*?}" % re.escape(cmd), "", line, count=1
+                    )
             else:
                 break
 
