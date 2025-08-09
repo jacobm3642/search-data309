@@ -1,86 +1,90 @@
+#!pip install arxiv
 import arxiv, re, nltk, time
 import pandas as pd
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from collections import Counter
-from google.colab import files
+
 def remove_urls(text):
-    return re.sub(r'(http[s]?://\S+)|(www\.\S+)|(\b\S+\.(com|edu|org|net|gov|io|co)(/\S*)?)', '', text).strip()
-
+    """Remove URLs, website links, and common domains from text"""
+    return re.sub(r'(http[s]?://\S+)|(www\.\S+)|(\b\S+\.(?:com|edu|org|net|gov|io|co)(?:/\S*)?)', '', text, flags=re.IGNORECASE).strip()
+    
 def remove_latex_commands(text: str) -> str:
-    """Removes LaTeX commands and math environments from the text.Keeps arguments for specific commands like 'textit' and 'underline'."""
-    keep_arguments = {"textit": True, "underline": True}
-
+    """Remove LaTeX commands while preserving some formatting and handling special cases. Extended to handle complex formulas like \frac{}{}, \sum, \int, etc."""
+    keep_arguments = {"textit": True, "underline": True, "textbf": True}
     lines = text.splitlines(keepends=True)
     cleaned_lines = []
-
+    
     for line in lines:
-        # https://regex-vis.com/?r=%5C%5C%28.*%3F%29%5C%7B%28.*%3F%29%5C%7D%7C%5C%24%28.*%3F%29%5C%24
-        while re.search(r"\\(.*?)\{(.*?)\}|\$(.*?)\$", line):
-            match = re.search(r"\\(.*?)\{(.*?)\}|\$(.*?)\$", line)
+        line = re.sub(r'\$?\^\{?([^}\$]+)\}?\$?', r'^\1', line)
+        line = re.sub(r'_\{(.*?)\}', r'_\1', line)
+        line = re.sub(r'\$+', '', line)  # Remove remaining $ symbols
+        line = re.sub(r'\\begin\{.*?\}.*?\\end\{.*?\}', ' ', line, flags=re.DOTALL)
+        line = re.sub(r'\\(?!(textit|underline|textbf)\b)[a-zA-Z]+\{.*?\}', ' ', line)
+        line = re.sub(r'\\([%&_])', r'\1', line)
+        while re.search(r"\\(textit|underline|textbf)\{(.*?)\}", line):
+            match = re.search(r"\\(textit|underline|textbf)\{(.*?)\}", line)
             if match:
-                cmd = match.group(1) # Command name (e.g., 'textit')
-                arg = match.group(2) # Argument of the command
-                math = match.group(3) # Content within $...$
-
-                if math is not None:
-                    line = re.sub(
-                        r"\$(.*?)\$", "", line, count=1
-                    )
-                    continue
-
-                if cmd is not None:
-                    if keep_arguments.get(cmd, False):
-                        line = re.sub(
-                            r"\\%s{%s}" % (re.escape(cmd), re.escape(arg)),
-                            arg,
-                            line,
-                            count=1,
-                        )
-                    else:
-                        line = re.sub(
-                            r"\\%s{.*?}" % re.escape(cmd), "", line, count=1
-                        )
-            else:
-                break
-
+                cmd = match.group(1)
+                arg = match.group(2)
+                line = re.sub(r"\\%s\{%s\}" % (re.escape(cmd), re.escape(arg)), arg, line, count=1)
+        
+        line = re.sub(r'\\frac\{.*?\}\{.*?\}', ' ', line)  
+        line = re.sub(r'\\sqrt\{.*?\}', ' ', line)         
+        line = re.sub(r'\\(?:sum|int|prod)(?:\s*\^.*?)?\{.*?\}', ' ', line)
+        line = line.replace('\\', ' ')
         cleaned_lines.append(line)
-
-    return "".join(cleaned_lines)
+    
+    result = "".join(cleaned_lines)
+    result = re.sub(r'\s+', ' ', result).strip()  # Collapse multiple spaces
+    return result
+    
+def clean_text(text: str, lowercase: bool = True) -> str:
+    """Combine all cleaning steps: LaTeX, URLs, extra spaces, and optional lowercase"""
+    text = remove_latex_commands(text)
+    text = remove_urls(text)
+    if lowercase:
+        text = text.lower() 
+    text = re.sub(r'\s+', ' ', text)  # Collapse multiple spaces
+    return text.strip()
 
 def extract_keywords(text, top_k=10):
-    text = re.sub(r'[^a-z0-9\s]', ' ', text.lower())
-    words = [w for w in word_tokenize(text) if w not in stopwords.words('english') and len(w) > 1]
+    """Extract keywords from cleaned text (assumes text is already cleaned)"""
+    text = re.sub(r'[^a-z0-9\s]', ' ', text)  # Additional cleaning
+    words = [w for w in word_tokenize(text) 
+             if w not in stopwords.words('english') and len(w) > 1]
     return [word for word, _ in Counter(words).most_common(top_k)]
 
-client = arxiv.Client(page_size=200, delay_seconds=1.0, num_retries=3)
-categories = ["cs.AR","cs.AI", "cs.CC", "cs.CE", "cs.CG", "cs.CL", "cs.CR", "cs.CV", "cs.CY", "cs.DB", "cs.DC", "cs.DL", "cs.DM", "cs.DS", "cs.ET", "cs.FL", "cs.GR", "cs.GT", "cs.HC",
+client = arxiv.Client(page_size=100, delay_seconds=3.0, num_retries=3)
+categories = ["cs.AI", "cs.AR", "cs.CC", "cs.CE", "cs.CG", "cs.CL", "cs.CR", "cs.CV", "cs.CY", "cs.DB", "cs.DC", "cs.DL", "cs.DM", "cs.DS", "cs.ET", "cs.FL", "cs.GR", "cs.GT", "cs.HC",
             "cs.IR", "cs.IT", "cs.LG", "cs.LO", "cs.MA", "cs.MM", "cs.MS", "cs.NA", "cs.NE", "cs.NI", "cs.OS", "cs.PF", "cs.PL", "cs.RO", "cs.SC", "cs.SD", "cs.SE", "cs.SI", "cs.SY", "cs.GL", "cs.OH"]
+
 papers, collected_titles = [], set()
+target_papers = 50000
 
 for category in categories:
-    if len(papers) >= 50000:
+    if len(papers) >= target_papers:
         break
-    print(f"{category}, have collected: {len(papers)}")
-    search = arxiv.Search(query=f'cat:{category}', max_results=min(4500, 50000 - len(papers)), sort_by=arxiv.SortCriterion.SubmittedDate)
+    print(f"Fetching {category}... Collected: {len(papers)}/{target_papers}")
+    search = arxiv.Search(query=f'cat:{category}',max_results=min(5000, target_papers - len(papers)),sort_by=arxiv.SortCriterion.SubmittedDate)
 
     try:
         for paper in client.results(search):
-            if len(papers) >= 50000:
+            if len(papers) >= target_papers:
                 break
-            title_clean = remove_urls(remove_latex_commands(paper.title)).lower().strip()
+            title_clean = clean_text(paper.title)
             if title_clean in collected_titles:
                 continue
             collected_titles.add(title_clean)
-            abstract_clean = remove_urls(remove_latex_commands(paper.summary)).lower()
-            keywords = sorted(set(extract_keywords(title_clean) + extract_keywords(abstract_clean)))
-            papers.append({'title_original': paper.title, 'title_cleaned': title_clean, 'abstract_original': paper.summary, 'abstract_cleaned': abstract_clean,
-                'keywords': ', '.join(keywords), 'arxiv_url': paper.entry_id, 'pdf_url': paper.pdf_url,
-                'category': paper.categories[0] if paper.categories else category, 'published': str(paper.published.date()) if paper.published else ''})
+            abstract_clean = clean_text(paper.summary)
+            keywords = sorted(set( extract_keywords(title_clean) + extract_keywords(abstract_clean)))
+            papers.append({'title_original': paper.title,'title_cleaned': title_clean,'abstract_original': paper.summary,'abstract_cleaned': abstract_clean,'keywords': ', '.join(keywords),
+                'arxiv_url': paper.entry_id,'pdf_url': paper.pdf_url,'category': paper.categories[0] if paper.categories else category,'published': str(paper.published.date()) if paper.published else ''})
+            
     except Exception as e:
         time.sleep(5)
 
-df = pd.DataFrame(papers).drop_duplicates(subset=['title_cleaned']).iloc[:50000]
-df.to_csv('arxiv_50k_multi_cat.csv', index=False)
-files.download('arxiv_50k_multi_cat.csv')
-print(f"Finished: {len(df)} papers")
+df = pd.DataFrame(papers).drop_duplicates(subset=['title_cleaned']).iloc[:target_papers]
+output_filename = f'arxiv_{len(df)}_papers.csv'
+df.to_csv(output_filename, index=False)
+print(f"\nFinished! Collected {len(df)} papers.")
