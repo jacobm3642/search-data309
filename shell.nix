@@ -1,8 +1,24 @@
-  { pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import <nixpkgs> {} }:
 
-  pkgs.mkShell {
-      buildInputs = with pkgs; [
-        python3
-        (python3.withPackages(ps: with ps; [ pandas requests nltk flask pinecone]))
-      ];
-  }
+with pkgs;
+
+mkShell {
+  buildInputs =  [
+    (python3.withPackages (ps: with ps; [
+      pip
+      pandas
+      requests
+      nltk
+      flask
+      pinecone-client
+      arxiv
+      grpcio
+      protobuf
+      googleapis-common-protos
+    ]))
+
+    protobuf
+    grpc-gateway
+  ];
+
+}
