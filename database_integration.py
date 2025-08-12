@@ -59,7 +59,7 @@ class Query:
         return embed(self.text)
 
 
-class Database_Handler:
+class Database_handler:
     def __init__(self) -> None:
         self.pinecone = None
         self.index = None
@@ -69,10 +69,17 @@ class Database_Handler:
     def _connect_to_db(self) -> bool:
         self.pinecone = Pinecone(api_key=get_env_parameter("pinecone_api"))
         self.index = get_env_parameter("index_name")
-        self.index_target = self.pinecone.Index(self.index)
+        self._set_index_target(get_env_parameter("index"))
 
         self.connected = self._test_connection()
         return self.connected
+    
+    def _set_index_target(self, target: str):
+        if not self.pinecone.has_index(target):
+            #TODO replace {} with something
+            self.genrate_index({}, target)
+        self.index_target = self.pinecone.Index(self.index)
+
 
     def _test_connection(self) -> bool:
         try:
@@ -90,6 +97,9 @@ class Database_Handler:
             if self._connect_to_db():
                 break
         else:
+            self.pinecone = None
+            self.index = None
+            self.index_target = None
             raise ValueError("Failed to open a connection to db")
 
     def search(self, query: Query):
@@ -99,3 +109,26 @@ class Database_Handler:
         prepared = query.prepare()
         return self.index_target.query(**prepared)
 
+
+    def upload_vector_set(key: dict, records: list) -> bool:
+        pass
+
+    def genrate_index(key: dict, name: str):
+        if self.pinecone.has_index(name):
+            raise ValueError(f"Index {name} already exists")
+        self.pinecone.create_index(
+            name = name,
+            vector_type = "dense",
+            dimension=256
+            metric="cosine",
+            spec=ServerlessSpec(
+                cloud=get_env_parameter("cloud"),
+                region=get_env_parameter("region")
+            ),
+                
+            #temporary 
+            deletion_protection="disabled",
+            tags={
+                "environment": "development"
+            }
+        )
