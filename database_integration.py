@@ -65,7 +65,10 @@ class Database_handler:
         self.index = None
         self.index_target = None
         self.connected = False
- 
+    
+    def __str__(self):
+        return f"pc: {self.pinecone}\nindex: {self.index}"
+
     def _connect_to_db(self) -> bool:
         self.pinecone = Pinecone(api_key=get_env_parameter("pinecone_api"))
         self.index = get_env_parameter("index_name")
@@ -119,7 +122,7 @@ class Database_handler:
         self.pinecone.create_index(
             name = name,
             vector_type = "dense",
-            dimension=256
+            dimension=256,
             metric="cosine",
             spec=ServerlessSpec(
                 cloud=get_env_parameter("cloud"),

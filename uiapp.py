@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from database_integration import Query, Database_handler
 
 app = Flask(__name__)
 

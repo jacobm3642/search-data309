@@ -1,3 +1,4 @@
 .env
-arxiv_papers.csv
+*.csv
+__pycache__/
 venv/
