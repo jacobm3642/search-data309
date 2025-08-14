@@ -13,26 +13,58 @@ $(document).ready(function () {
         $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
     }
 
-    // When "Send" button is clicked
+    // Function to display search results returned by Pinecone or your backend
+    function displayResults(results) {
+        results.forEach(item => {
+            let resultCard = `
+                <div class="card my-2">
+                    <div class="card-body">
+                        <h5 class="card-title">${item.title || "Untitled"}</h5>
+                        <p class="card-text">${item.snippet || item.query || "No description available."}</p>
+                    </div>
+                </div>
+            `;
+            $('#chat-container').append(resultCard);
+        });
+    }
+
+    // Handle Send button click
     $('#send-btn').click(function () {
         const input = $('#user-input');
         const message = input.val().trim();
+        if (message === '') return;
 
-        if (message !== '') {
-            addMessage(message, 'user');
-            input.val('');
+        // Add user message to chat
+        addMessage(message, 'user');
+        input.val('');
 
-            // Simulate a reply from system after a short delay
-            setTimeout(() => {
-                addMessage("You said: " + message, 'system');
-            }, 400);
-        }
+        // Create JSON payload
+        let jsonData = {
+            id: Date.now().toString(),       
+            metadata: { query: message } 
+        };
+
+        // Send JSON to Pinecone
+        $.ajax({
+            url: "/send-query", 
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(jsonData),
+            success: function (response) {
+                displayResults(response.results || []);
+            },
+            error: function (xhr, status, error) {
+                console.error("Error sending query:", error);
+                addMessage("Error sending query.", 'system');
+            }
+        });
     });
 
-    // Also allow pressing Enter key to send
+    // Also allow Enter key to send
     $('#user-input').on('keypress', function (e) {
         if (e.which === 13) {
             $('#send-btn').click();
         }
     });
+
 });
