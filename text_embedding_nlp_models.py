@@ -42,7 +42,7 @@ print(f"Similarites:\n{similarities[:3]}")
 
 ### Checking to see if similar indices are actually similar
 
-# First check that the similarity between two abstracts is between 0.75 and 1 (excluding 1 as this is an 'exact' match)
+# First check that the similarity between two abstracts is between 0.75 and 1 (excluding 1 as this when it is matched to itself)
 similar_indices = []
 for j in range(len(similarities)):
    for i in range(len(similarities[j])):
@@ -62,3 +62,7 @@ for i in to_print[:5]:
   to_test.append(sum(diff) / len(diff))
 
 print(to_test)
+
+# Also print the actual abstracts to manually verify that they're the same
+for item in similar_indices[:5]:
+  print(f"items:\n{cleaned_cols.iloc[item[0]]}\n\n{cleaned_cols.iloc[item[1]]}\n\n\n\n")
