@@ -1,3 +1,7 @@
+import time
+
+start = time.time()
+
 # Importing the required library
 from sentence_transformers import SentenceTransformer
 
@@ -14,9 +18,12 @@ def embed(a_string):
   embedding = model.encode(a_string)
   list_of_embeddings.append(embedding)
 
+  ## return the vector not append it to a list
+  ## do __name__ == __main__
+
 
 # Testing my code with the first 1000 rows
-testing = df.head(1000)
+testing = df.head(10000)
 
 # Extracting the cleaned abstracts for the embeddings
 cleaned_cols = testing['abstract_cleaned']
@@ -27,42 +34,45 @@ for i in cleaned_cols:
   embed(i)
 print(f"First embedding:\n{list_of_embeddings[0]}")
 
-# Checking that the embeddings are already normalised
-import numpy as np
-sq_vals = 0
-for i in list_of_embeddings[0]:
-  sq_vals += (i ** 2)
+# # Checking that the embeddings are already normalised
+# import numpy as np
+# sq_vals = 0
+# for i in list_of_embeddings[0]:
+#   sq_vals += (i ** 2)
 
-print(f"Euclidean norm:\n{np.sqrt(sq_vals)}")
+# print(f"Euclidean norm:\n{np.sqrt(sq_vals)}")
 
-# Checking the similarities between each vector
-similarities = model.similarity(list_of_embeddings, list_of_embeddings)
-print(f"Similarites:\n{similarities[:3]}")
+# # Checking the similarities between each vector
+# similarities = model.similarity(list_of_embeddings, list_of_embeddings)
+# print(f"Similarites:\n{similarities[:3]}")
 
 
-### Checking to see if similar indices are actually similar
+# ### Checking to see if similar indices are actually similar
 
-# First check that the similarity between two abstracts is between 0.75 and 1 (excluding 1 as this when it is matched to itself)
-similar_indices = []
-for j in range(len(similarities)):
-   for i in range(len(similarities[j])):
-     if similarities[j][i] > 0.75:
-       if similarities[j][i] < 0.99999:
-          similar_indices.append((j, i))
+# # First check that the similarity between two abstracts is between 0.75 and 1 (excluding 1 as this when it is matched to itself)
+# similar_indices = []
+# for j in range(len(similarities)):
+#    for i in range(len(similarities[j])):
+#      if similarities[j][i] > 0.75:
+#        if similarities[j][i] < 0.99999:
+#           similar_indices.append((j, i))
 
-# Then extracting the embeddings associated with each of the abstracts
-to_print = []
-for item in similar_indices:
-  to_print.append((list_of_embeddings[item[0]], list_of_embeddings[item[1]]))
+# # Then extracting the embeddings associated with each of the abstracts
+# to_print = []
+# for item in similar_indices:
+#   to_print.append((list_of_embeddings[item[0]], list_of_embeddings[item[1]]))
 
-# Then averaging the difference between the two abstracts to ensure that they're actually similar
-to_test = []
-for i in to_print[:5]:
-  diff = i[0] - i[1]
-  to_test.append(sum(diff) / len(diff))
+# # Then averaging the difference between the two abstracts to ensure that they're actually similar
+# to_test = []
+# for i in to_print[:5]:
+#   diff = i[0] - i[1]
+#   to_test.append(sum(diff) / len(diff))
 
-print(to_test)
+# print(to_test)
 
-# Also print the actual abstracts to manually verify that they're the same
-for item in similar_indices[:5]:
-  print(f"items:\n{cleaned_cols.iloc[item[0]]}\n\n{cleaned_cols.iloc[item[1]]}\n\n\n\n")
+# # Also print the actual abstracts to manually verify that they're the same
+# for item in similar_indices[:5]:
+#   print(f"items:\n{cleaned_cols.iloc[item[0]]}\n\n{cleaned_cols.iloc[item[1]]}\n\n\n\n")
+
+end = time.time()
+print(end - start)
