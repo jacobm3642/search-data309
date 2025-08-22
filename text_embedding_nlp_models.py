@@ -1,6 +1,6 @@
-import time
+# import time
 
-start = time.time()
+# start = time.time()
 
 # Importing the required library
 from sentence_transformers import SentenceTransformer
@@ -13,26 +13,27 @@ import pandas as pd
 df = pd.read_csv('arxiv_49999_papers(in).csv')
 
 # Creating an embedding function that works for any string
-list_of_embeddings = []
+# list_of_embeddings = []
 def embed(a_string):
   embedding = model.encode(a_string)
-  list_of_embeddings.append(embedding)
+  return embedding
+  # list_of_embeddings.append(embedding)
 
   ## return the vector not append it to a list
   ## do __name__ == __main__
 
 
-# Testing my code with the first 1000 rows
-testing = df.head(10000)
+# # Testing my code with the first 1000 rows
+# testing = df.head(10000)
 
-# Extracting the cleaned abstracts for the embeddings
-cleaned_cols = testing['abstract_cleaned']
-print(f"First few cleaned abstracts:\n{cleaned_cols[:5]}")
+# # Extracting the cleaned abstracts for the embeddings
+# cleaned_cols = df['abstract_cleaned']
+# print(f"First few cleaned abstracts:\n{cleaned_cols[:5]}")
 
-# Creating the embeddings
-for i in cleaned_cols:
-  embed(i)
-print(f"First embedding:\n{list_of_embeddings[0]}")
+# # Creating the embeddings
+# for i in cleaned_cols:
+#   embed(i)
+# # print(f"First embedding:\n{list_of_embeddings[0]}")
 
 # # Checking that the embeddings are already normalised
 # import numpy as np
@@ -74,5 +75,8 @@ print(f"First embedding:\n{list_of_embeddings[0]}")
 # for item in similar_indices[:5]:
 #   print(f"items:\n{cleaned_cols.iloc[item[0]]}\n\n{cleaned_cols.iloc[item[1]]}\n\n\n\n")
 
-end = time.time()
-print(end - start)
+# end = time.time()
+# print(end - start)
+
+if __name__ == "__main__":
+  embed()
