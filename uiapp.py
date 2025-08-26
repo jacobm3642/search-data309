@@ -1,63 +1,40 @@
 from flask import Flask, render_template, request, jsonify
-import requests
-import os
-import random
+from database_integration import Database_handler, Query
 
 app = Flask(__name__)
 
-# Pinecone settings
-PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
-PINECONE_URL = "https://semantic-search-ngjtb5f.svc.aped-4627-b74a.pinecone.io"
-VECTOR_DIM = 1024
-placeholder_vector = [random.uniform(0.01, 0.1) for _ in range(VECTOR_DIM)]
-
-# Serverless upsert endpoint
-UPSERT_URL = f"{PINECONE_URL}/vectors/upsert"
+db_handler = Database_handler()
 
 @app.route('/')
 def chat():
     return render_template('chat.html')
 
-@app.route('/send-query', methods=['POST'])
-def send_query():
+@app.route('/search', methods=['POST'])
+def search():
     data = request.json
-    if not data or "metadata" not in data:
-        return jsonify({"error": "No metadata found"}), 400
+    if not data or "query" not in data:
+        return jsonify({"error": "No query provided"}), 400
 
-    payload = {
-        "vectors": [
-            {
-                "id": data.get("id"),
-                "metadata": data.get("metadata"),
-                "values": placeholder_vector
-            }
-        ]
-    }
+    query_text = data["query"]
 
-    headers = {
-        "Content-Type": "application/json",
-        "Api-Key": PINECONE_API_KEY
-    }
+    q = Query().set_body(query_text).set_count(10)
 
     try:
-        response = requests.post(UPSERT_URL, json=payload, headers=headers)
-        
-        # Debugging
-        print("Pinecone status code:", response.status_code)
-        print("Pinecone response text:", response.text)
+        results = db_handler.search(q)
 
-        response.raise_for_status()
+        # change the format when we decided what structure
+        formatted_results = []
+        for r in results.items:
+            formatted_results.append({
+                "title": getattr(r, "title", "Untitled"),
+                "snippet": getattr(r, "snippet", str(r))
+            })
 
-        # Return metadata to frontend
-        return jsonify({"results": [data.get("metadata")]})
+        return jsonify({"results": formatted_results})
 
-    except requests.exceptions.RequestException as e:
-        # Return full Pinecone response to frontend for debugging
-        return jsonify({
-            "error": str(e),
-            "pinecone_status": response.status_code if 'response' in locals() else None,
-            "pinecone_text": response.text if 'response' in locals() else None
-        }), 500
+    except Exception as e:
+        print("Error during search:", e)
+        return jsonify({"error": "Search failed"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
