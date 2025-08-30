@@ -1,6 +1,6 @@
-# import time
+import time
 
-# start = time.time()
+start = time.time()
 
 # Importing the required library
 from sentence_transformers import SentenceTransformer
@@ -8,75 +8,78 @@ from sentence_transformers import SentenceTransformer
 # Importing the chosen NLP model
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
-# Reading in the dataset
-import pandas as pd
-df = pd.read_csv('arxiv_49999_papers(in).csv')
-
 # Creating an embedding function that works for any string
-# list_of_embeddings = []
 def embed(a_string):
   embedding = model.encode(a_string)
   return embedding
   # list_of_embeddings.append(embedding)
 
-  ## return the vector not append it to a list
-  ## do __name__ == __main__
+
+def similarities(embedding_list):
+  similar_list = model.similarity(embedding_list, embedding_list)
+  return similar_list
 
 
-# # Testing my code with the first 1000 rows
-# testing = df.head(10000)
+# Reading in the dataset
+import pandas as pd
+df = pd.read_csv('arxiv_49999_papers(in).csv')
 
-# # Extracting the cleaned abstracts for the embeddings
-# cleaned_cols = df['abstract_cleaned']
-# print(f"First few cleaned abstracts:\n{cleaned_cols[:5]}")
+# Testing my code with the first 10000 rows
+testing = df.head(10000)
 
-# # Creating the embeddings
-# for i in cleaned_cols:
-#   embed(i)
-# # print(f"First embedding:\n{list_of_embeddings[0]}")
+# Extracting the cleaned abstracts for the embeddings
+cleaned_cols = testing['abstract_cleaned']
+print(f"First few cleaned abstracts:\n{cleaned_cols[:5]}")
 
-# # Checking that the embeddings are already normalised
-# import numpy as np
-# sq_vals = 0
-# for i in list_of_embeddings[0]:
-#   sq_vals += (i ** 2)
+# Creating the embeddings
+list_of_embeddings = []
+for i in cleaned_cols:
+  list_of_embeddings.append(embed(i))
+print(f"First embedding:\n{list_of_embeddings[0]}\n\n")
 
-# print(f"Euclidean norm:\n{np.sqrt(sq_vals)}")
+# Checking that the embeddings are already normalised
+import numpy as np
+sq_vals = 0
+for i in list_of_embeddings[0]:
+  sq_vals += (i ** 2)
 
-# # Checking the similarities between each vector
-# similarities = model.similarity(list_of_embeddings, list_of_embeddings)
-# print(f"Similarites:\n{similarities[:3]}")
+print(f"Euclidean norm:\n{np.sqrt(sq_vals)}\n\n")
+
+# Checking the similarities between each vector
+similarity_test = similarities(list_of_embeddings)
+print(f"First three similarites:\n{similarity_test[:3]}\n\n")
 
 
-# ### Checking to see if similar indices are actually similar
+## Checking to see if similar indices are actually similar
 
-# # First check that the similarity between two abstracts is between 0.75 and 1 (excluding 1 as this when it is matched to itself)
-# similar_indices = []
-# for j in range(len(similarities)):
-#    for i in range(len(similarities[j])):
-#      if similarities[j][i] > 0.75:
-#        if similarities[j][i] < 0.99999:
-#           similar_indices.append((j, i))
+# First check that the similarity between two abstracts is below 0.15, or between 0.85 and 1 (excluding 1 as this when it is matched to itself)
+similar_indices = []
+dissimilar_indices = []
 
-# # Then extracting the embeddings associated with each of the abstracts
-# to_print = []
-# for item in similar_indices:
-#   to_print.append((list_of_embeddings[item[0]], list_of_embeddings[item[1]]))
+for j in range(len(similarity_test)):
+  for i in range(len(similarity_test[j])):
+    if len(dissimilar_indices) < 3:
+      if similarity_test[j][i] < 0.15:
+        dissimilar_indices.append((j, i))
+    elif len(similar_indices) < 3:
+      if similarity_test[j][i] > 0.85:
+        if similarity_test[j][i] < 0.99999:
+          similar_indices.append((j, i))
 
-# # Then averaging the difference between the two abstracts to ensure that they're actually similar
-# to_test = []
-# for i in to_print[:5]:
-#   diff = i[0] - i[1]
-#   to_test.append(sum(diff) / len(diff))
+# Print the first three similar abstracts to manually verify that they're the same
+for item in similar_indices:
+  print(f"Similar items:\n{cleaned_cols.iloc[item[0]]}\n\n{cleaned_cols.iloc[item[1]]}\n\n")
 
-# print(to_test)
+## Dissimilarity:
+# Print the first three dissimilar abstracts to manually verify that they're dissimilar
+for item in dissimilar_indices:
+  print(f"Dissimilar items:\n{cleaned_cols.iloc[item[0]]}\n\n{cleaned_cols.iloc[item[1]]}\n\n")
 
-# # Also print the actual abstracts to manually verify that they're the same
-# for item in similar_indices[:5]:
-#   print(f"items:\n{cleaned_cols.iloc[item[0]]}\n\n{cleaned_cols.iloc[item[1]]}\n\n\n\n")
+# Checking how long my code takes to run 
+end = time.time()
+print(f"Length of time:\n{end - start}")
 
-# end = time.time()
-# print(end - start)
-
+# Ensuring that the entire file doesn't compile when called
 if __name__ == "__main__":
   embed()
+  similarities()
