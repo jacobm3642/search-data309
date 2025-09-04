@@ -25,7 +25,7 @@ import pandas as pd
 df = pd.read_csv('arxiv_49999_papers(in).csv')
 
 # Testing my code with the first 10000 rows
-testing = df.head(10000)
+testing = df.head(1000)
 
 # Extracting the cleaned abstracts for the embeddings
 cleaned_cols = testing['abstract_cleaned']
