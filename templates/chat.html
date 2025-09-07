@@ -3,31 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <title>Semantic Search Engine</title>
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body style="margin:0; font-family:Arial, sans-serif; background:#f4f6f8; color:#333;">
+<body class="app-body">
 
   <!-- Header -->
-  <div style="background:#4f46e5; padding:20px; text-align:center; color:white;">
-    <h1 style="margin:0; font-size:28px;">📚 Semantic Search Engine</h1>
-    <p style="margin:5px 0 0; font-size:14px;">Find academic papers smarter & faster</p>
-  </div>
+  <header class="app-header">
+    <h1>📚 Semantic Search Engine</h1>
+    <p>Find academic papers smarter & faster</p>
+  </header>
 
   <!-- Search Section -->
-  <div style="max-width:900px; margin:30px auto; padding:20px; background:white; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
-
-    <div style="display:flex; gap:10px; align-items:center; margin-bottom:20px;">
-      <input id="query" type="text" placeholder="Type your research query..." 
-             style="flex:1; padding:12px; border-radius:8px; border:1px solid #ccc; font-size:16px;">
-      <button id="sendBtn" 
-              style="padding:12px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
-        🔍 Search
-      </button>
+  <main class="search-section">
+    <div class="search-bar">
+      <input id="query" type="text" placeholder="Type your research query...">
+      <button id="sendBtn">🔍 Search</button>
     </div>
 
     <!-- Top-K Selector -->
-    <div style="margin-bottom:20px;">
-      <label for="topk" style="margin-right:10px; font-weight:bold;">Results per page:</label>
-      <select id="topk" style="padding:8px 12px; border-radius:6px; border:1px solid #ccc; font-size:15px;">
+    <div class="topk-selector">
+      <label for="topk">Results per page:</label>
+      <select id="topk">
         <option value="10" selected>10</option>
         <option value="20">20</option>
         <option value="30">30</option>
@@ -37,10 +33,10 @@
     </div>
 
     <!-- Results Section -->
-    <div id="results" style="margin-top:20px;">
-      <p style="color:#888; text-align:center;">No results yet. Try searching for something!</p>
+    <div id="results" class="results">
+      <p class="placeholder">No results yet. Try searching for something!</p>
     </div>
-  </div>
+  </main>
 
   <!-- Script -->
   <script src="/static/js/script.js"></script>

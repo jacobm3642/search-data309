@@ -8,26 +8,26 @@ document.addEventListener("DOMContentLoaded", function () {
         resultsDiv.innerHTML = "";
 
         if (!results.length) {
-            resultsDiv.innerHTML = "<p style='color:#888;text-align:center;'>No results found.</p>";
+            resultsDiv.innerHTML = "<p class='no-results'>No results found.</p>";
             return;
         }
 
         results.forEach(item => {
             const card = document.createElement("div");
-            card.style.cssText = "background:#fff; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); padding:15px; margin-bottom:15px;";
+            card.className = "result-card";
 
             card.innerHTML = `
-                <h3 style="margin:0; color:#4f46e5;">${item.title}</h3>
-                <p style="margin:5px 0; font-size:14px; color:#555;">
+                <h3 class="result-title">${item.title}</h3>
+                <p class="result-meta">
                     ${item.author} • ${item.year}
                 </p>
-                <p style="margin:10px 0; font-size:15px;">${item.abstract}</p>
+                <p class="result-abstract">${item.abstract}</p>
                 <p>
-                    <a href="${item.link}" target="_blank" style="color:#2563eb; text-decoration:underline;">
+                    <a href="${item.link}" target="_blank" class="result-link">
                         View Original Paper
                     </a>
                 </p>
-                <span style="display:inline-block; padding:5px 10px; background:#e0e7ff; color:#1e3a8a; border-radius:6px; font-size:13px;">
+                <span class="similarity-badge">
                     Similarity: ${item.similarity !== null ? item.similarity.toFixed(3) : "N/A"}
                 </span>
             `;
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (queryText === "") return;
 
-        resultsDiv.innerHTML = "<p style='color:#666;text-align:center;'>Searching...</p>";
+        resultsDiv.innerHTML = "<p class='searching'>Searching...</p>";
 
         fetch("/search", {
             method: "POST",
@@ -51,13 +51,13 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    resultsDiv.innerHTML = `<p style='color:red;text-align:center;'>${data.error}</p>`;
+                    resultsDiv.innerHTML = `<p class='error-msg'>${data.error}</p>`;
                 } else {
                     displayResults(data.results || []);
                 }
             })
             .catch(() => {
-                resultsDiv.innerHTML = "<p style='color:red;text-align:center;'>Server error. Please try again.</p>";
+                resultsDiv.innerHTML = "<p class='error-msg'>Server error. Please try again.</p>";
             });
     }
 
