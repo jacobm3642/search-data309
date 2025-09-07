@@ -22,6 +22,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     ${item.author} • ${item.year}
                 </p>
                 <p style="margin:10px 0; font-size:15px;">${item.abstract}</p>
+                <p>
+                    <a href="${item.link}" target="_blank" style="color:#2563eb; text-decoration:underline;">
+                        View Original Paper
+                    </a>
+                </p>
                 <span style="display:inline-block; padding:5px 10px; background:#e0e7ff; color:#1e3a8a; border-radius:6px; font-size:13px;">
                     Similarity: ${item.similarity !== null ? item.similarity.toFixed(3) : "N/A"}
                 </span>

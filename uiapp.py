@@ -3,8 +3,8 @@ from database_integration import Database_handler, Query
 import random
 
 app = Flask(__name__)
-USE_MOCK = True #change to false when don need the mock data
 
+USE_MOCK = True   # <<< flip this False when DB is ready
 db_handler = Database_handler()
 
 @app.route('/')
@@ -29,7 +29,8 @@ def search():
                 "author": f"Author {chr(65+i%26)}",
                 "year": random.choice([2018, 2019, 2020, 2021, 2022, 2023]),
                 "abstract": f"This is a mock abstract for paper {i+1}. It describes how semantic search improves research.",
-                "similarity": round(random.uniform(0.7, 0.99), 3)
+                "similarity": round(random.uniform(0.7, 0.99), 3),
+                "link": f"https://example.com/paper{i+1}"
             })
         return jsonify({"results": mock_results})
 
@@ -44,7 +45,8 @@ def search():
                 "author": getattr(r, "author", "Unknown author"),
                 "year": getattr(r, "year", "N/A"),
                 "abstract": getattr(r, "abstract", getattr(r, "snippet", "No abstract available")),
-                "similarity": getattr(r, "similarity", None)
+                "similarity": getattr(r, "similarity", None),
+                "link": getattr(r, "link", "#")
             })
 
         return jsonify({"results": formatted_results})
