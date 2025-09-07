@@ -1,9 +1,12 @@
-function POST_wrapper(route, jsonData, successCallback, errorCallback) {
+let URL = "http://127.0.0.1:5000/"
+
+
+function req_wrapper(route, jsonData, successCallback, errorCallback, methodType = "POST") {
     var jsonDataString = JSON.stringify(jsonData);
 
     $.ajax({
-        url: "http://127.0.0.1:8080/" + route,
-        method: "POST",
+        url: URL + route,
+        method: methodType,
         data: jsonDataString,
         contentType: "application/json",
         success: function(data) {
@@ -22,11 +25,11 @@ function POST_wrapper(route, jsonData, successCallback, errorCallback) {
 }
 
 function check_post_route(route) {
-    POST_wrapper(route, JSON.stringify("hello there"), x => alert(x), (x, y) => alert(y.responseText));
+    req_wrapper(route, "hello there", x => alert(x), x => alert(x), methodType = "GET");
 }
 
 function add_p(text) {
-  $.("#body").innerHTML = "hello";
+  $("#body").innerHTML = "hello";
 }
 
 

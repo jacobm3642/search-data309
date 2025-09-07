@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+
+import sys
+import csv
+from database_integration import *
+
+db_handler = Database_handler()
+
+def get_arg():
+    if len(sys.argv) > 1:
+        return sys.argv[1]
+    return None
+
+def process_row(line, col_labels):
+    row = {}
+    #row["vector"] = embeding(line[col_labels.index("abstract_cleaned")])
+    row["metadata"] = {"title": line[col_labels.index("title_cleaned")],
+                       "abstract": line[col_labels.index("abstract_cleaned")],
+                       "keyword": line[col_labels.index("keywords")],
+                       "arxiv_url": line[col_labels.index("arxiv_url")],
+                       "pdf_url": line[col_labels.index("pdf_url")],
+                       "category": line[col_labels.index("category")],
+                       "date_published": line[col_labels.index("published")],
+                       }
+    row["id"] = None #maybe uuidv6 but that might be overkill
+    #db_handler.upload_vector_set(row) # upload_vector_set may need a refactor
+    print(row)
+
+def process_csv(filepath):
+    with open(filepath, 'r') as file:
+        csv_reader = csv.reader(file)
+        col_labels = next(csv_reader)
+        print(col_labels)
+        for line in csv_reader:
+            process_row(line, col_labels)
+
+
+if __name__ == "__main__":
+    process_csv(get_arg())

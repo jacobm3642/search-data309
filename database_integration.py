@@ -2,6 +2,10 @@ from pinecone import Pinecone, ServerlessSpec
 
 debug = False
 
+#placeholder
+def embed(string):
+    return [0]
+
 def get_env_parameter(key: str) -> str:
     with open("./.env", "r") as env:
         for raw_line in env:
@@ -9,9 +13,6 @@ def get_env_parameter(key: str) -> str:
             if len(parts) == 2 and parts[0] == key:
                 return parts[1]
     raise ValueError(f"key \"{key}\" not found in .env")
-
-def embed(text):
-    return [0]
 
 class Query:
     def __init__(self) -> None:
@@ -30,6 +31,20 @@ class Query:
 
     def set_body(self, text: str) -> "Query":
         self.text = text
+        return self
+
+    def _match_key_to_set_method(self, key: str, value: any) -> None:
+        match key:
+            case "top_k":
+                self.set_count(value)
+            case "query":
+                self.set_body(value)
+            case _:
+                raise ValueError(f"unkown key {key} passed to _match_key_to_set_method")
+    
+    def from_dict(self, data: dict) -> "Query":
+        for key in data.keys():
+            self._match_key_to_set_method(key, data[key])
         return self
 
     def set_count(self, count: int) -> "Query":
@@ -65,6 +80,8 @@ class Database_handler:
         self.index = None
         self.index_target = None
         self.connected = False
+        self.reattempt_connection = 3
+        self.vector_size = 512
     
     def __str__(self):
         return f"pc: {self.pinecone}\nindex: {self.index}"
@@ -72,12 +89,12 @@ class Database_handler:
     def _connect_to_db(self) -> bool:
         self.pinecone = Pinecone(api_key=get_env_parameter("pinecone_api"))
         self.index = get_env_parameter("index_name")
-        self._set_index_target(get_env_parameter("index"))
+        self._set_index_target(self.index)
 
         self.connected = self._test_connection()
         return self.connected
     
-    def _set_index_target(self, target: str):
+    def _set_index_target(self, target: str) -> None:
         if not self.pinecone.has_index(target):
             #TODO replace {} with something
             self.genrate_index({}, target)
@@ -96,7 +113,7 @@ class Database_handler:
         if self.connected:
             return
 
-        for _ in range(3):
+        for _ in range(self.reattempt_connection):
             if self._connect_to_db():
                 break
         else:
@@ -105,24 +122,48 @@ class Database_handler:
             self.index_target = None
             raise ValueError("Failed to open a connection to db")
 
-    def search(self, query: Query):
+    def search(self, query: Query) -> dict:
         if not self.connected:
             self.connect_db()
 
         prepared = query.prepare()
         return self.index_target.query(**prepared)
 
+    def upload_vector_set(self, key: dict, records: list) -> bool:
+        if not self.connected:
+            self.connect_db()
 
-    def upload_vector_set(key: dict, records: list) -> bool:
-        pass
+        id_key = key.get("id", "id")
+        vec_key = key.get("values") or key.get("vector") or key.get("embedding")
+        meta_key = key.get("metadata", "metadata")
+        ns_spec = key.get("namespace", None)
 
-    def genrate_index(key: dict, name: str):
+        by_ns: dict[str | None, list[dict]] = {}
+        for rec in records:
+            ns = None
+            if ns_spec is not None:
+                ns = rec[ns_spec] if isinstance(ns_spec, str) and ns_spec in rec else ns_spec
+
+            payload = {
+                "id": str(rec[id_key]),
+                "values": rec[vec_key],
+                "metadata": rec[meta_key],
+            }
+            by_ns.setdefault(ns, []).append(payload)
+
+        for ns, vecs in by_ns.items():
+            self.index_target.upsert(vectors=vecs, namespace=ns)
+
+        return True
+
+
+    def genrate_index(self, key: dict, name: str) -> None:
         if self.pinecone.has_index(name):
             raise ValueError(f"Index {name} already exists")
         self.pinecone.create_index(
             name = name,
             vector_type = "dense",
-            dimension=256,
+            dimension=self.vector_size,
             metric="cosine",
             spec=ServerlessSpec(
                 cloud=get_env_parameter("cloud"),
