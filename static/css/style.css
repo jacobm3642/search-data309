@@ -52,6 +52,7 @@
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
+  transition: background 0.2s ease;
 }
 .search-bar button:hover {
   background: #4338ca;
@@ -81,17 +82,25 @@
   text-align: center;
 }
 
-/* Result Cards (these match script.js output) */
+/* Result Cards */
 .result-card {
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   padding: 15px;
   margin-bottom: 15px;
+  transition: all 0.25s ease;
 }
+.result-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+/* Card Contents */
 .result-title {
   margin: 0;
   color: #4f46e5;
+  font-size: 20px;
 }
 .result-meta {
   margin: 5px 0;
@@ -101,11 +110,19 @@
 .result-abstract {
   margin: 10px 0;
   font-size: 15px;
+  line-height: 1.4;
 }
 .result-link {
   color: #2563eb;
   text-decoration: underline;
+  transition: color 0.2s ease, font-weight 0.2s ease;
 }
+.result-link:hover {
+  color: #1e3a8a;
+  font-weight: bold;
+}
+
+/* Similarity Badge */
 .similarity-badge {
   display: inline-block;
   padding: 5px 10px;
@@ -113,4 +130,10 @@
   color: #1e3a8a;
   border-radius: 6px;
   font-size: 13px;
+  margin-top: 8px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+.result-card:hover .similarity-badge {
+  background: #c7d2fe;
+  transform: scale(1.05);
 }
