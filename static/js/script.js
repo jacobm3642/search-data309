@@ -26,10 +26,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
             card.innerHTML = `
                 <h3 class="result-title">
-                    <a href="${item.link}" target="_blank">${item.title}</a>
+                    <a href="${item.arxiv_url}" target="_blank">${item.title}</a>
                 </h3>
-                <p class="result-meta">${item.author} • ${item.year}</p>
+                <p class="result-meta">Category: ${item.category} • Published: ${item.date_published}</p>
                 <p class="result-abstract">${item.abstract}</p>
+                <p class="result-keywords"><strong>Keywords:</strong> ${item.keyword}</p>
+                <div class="result-links">
+                    ${item.pdf_url ? `<a href="${item.pdf_url}" target="_blank" class="pdf-btn">📄 View PDF</a>` : ""}
+                </div>
                 <span class="similarity-badge">
                     Similarity: ${item.similarity !== null ? item.similarity.toFixed(3) : "N/A"}
                 </span>
@@ -37,6 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
             resultsDiv.appendChild(card);
         });
     }
+
 
     function sendQuery() {
         const queryText = queryInput.value.trim();

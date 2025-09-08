@@ -4,7 +4,7 @@ import random
 
 app = Flask(__name__)
 
-USE_MOCK = False   # <<< flip this False when DB is ready
+USE_MOCK = True   # <<< flip this False when DB is ready
 db_handler = Database_handler()
 
 @app.route('/')
@@ -26,28 +26,36 @@ def search():
         for i in range(topk):
             mock_results.append({
                 "title": f"Sample Paper {i+1}",
-                "author": f"Author {chr(65+i%26)}",
-                "year": random.choice([2018, 2019, 2020, 2021, 2022, 2023]),
-                "abstract": f"This is a mock abstract for paper {i+1}. It describes how semantic search improves research.",
-                "similarity": round(random.uniform(0.7, 0.99), 3),
-                "link": f"https://example.com/paper{i+1}"
+                "abstract": f"This is a mock abstract for paper {i+1}. It demonstrates how semantic search works.",
+                "keyword": "AI, Machine Learning, NLP",
+                "category": random.choice(["cs.CL", "cs.LG", "stat.ML"]),
+                "date_published": random.choice(
+                    ["2019-06-01", "2020-07-15", "2021-09-30", "2022-12-10", "2023-04-22"]
+                ),
+                "arxiv_url": f"https://arxiv.org/abs/1234.{1000+i}",
+                "pdf_url": f"https://arxiv.org/pdf/1234.{1000+i}.pdf",
+                "similarity": round(random.uniform(0.7, 0.99), 3)
             })
         return jsonify({"results": mock_results})
 
     # ---- Real DB search ----
-    q = Query().set_body(query_text).set_count(topk) # from_dict(data)
+    q = Query().from_dict(data)
     try:
         results = db_handler.search(q)
         formatted_results = []
+
         for r in getattr(results, "items", []):
+            metadata = getattr(r, "metadata", {})
+
             formatted_results.append({
-                "title": getattr(r, "title", "Untitled"),
-                # "author": getattr(r, "author", "Unknown author"),
-                "year": getattr(r, "year", "N/A"),
-                "abstract": getattr(r, "abstract", getattr(r, "snippet", "No abstract available")),
-                "similarity": getattr(r, "similarity", None),
-                "link": getattr(r, "link", "#")
-                # "PDF": getattr(r,"pdf_url")
+                "title": metadata.get("title", "Untitled"),
+                "abstract": metadata.get("abstract", "No abstract available"),
+                "keyword": metadata.get("keyword", "N/A"),
+                "category": metadata.get("category", "N/A"),
+                "date_published": metadata.get("date_published", "N/A"),
+                "arxiv_url": metadata.get("arxiv_url", "#"),
+                "pdf_url": metadata.get("pdf_url", "#"),
+                "similarity": getattr(r, "similarity", None)
             })
 
         return jsonify({"results": formatted_results})

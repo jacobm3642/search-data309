@@ -137,3 +137,19 @@
   background: #c7d2fe;
   transform: scale(1.05);
 }
+/* PDF button */
+.pdf-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: #0073e6;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.pdf-btn:hover {
+  background-color: #005bb5;
+}
