@@ -4,7 +4,7 @@ import random
 
 app = Flask(__name__)
 
-USE_MOCK = True   # <<< flip this False when DB is ready
+USE_MOCK = False   # <<< flip this False when DB is ready
 db_handler = Database_handler()
 
 @app.route('/')
@@ -35,18 +35,19 @@ def search():
         return jsonify({"results": mock_results})
 
     # ---- Real DB search ----
-    q = Query().set_body(query_text).set_count(topk)
+    q = Query().set_body(query_text).set_count(topk) # from_dict(data)
     try:
         results = db_handler.search(q)
         formatted_results = []
         for r in getattr(results, "items", []):
             formatted_results.append({
                 "title": getattr(r, "title", "Untitled"),
-                "author": getattr(r, "author", "Unknown author"),
+                # "author": getattr(r, "author", "Unknown author"),
                 "year": getattr(r, "year", "N/A"),
                 "abstract": getattr(r, "abstract", getattr(r, "snippet", "No abstract available")),
                 "similarity": getattr(r, "similarity", None),
                 "link": getattr(r, "link", "#")
+                # "PDF": getattr(r,"pdf_url")
             })
 
         return jsonify({"results": formatted_results})
