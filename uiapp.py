@@ -9,9 +9,8 @@ model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 def embed(text):
     """Generate embedding for a query string"""
-    return model.encode(text).tolist()   # convert numpy array → list
+    return model.encode(text).tolist()
 
-USE_MOCK = False
 db_handler = Database_handler()
 
 @app.route('/')
@@ -40,8 +39,6 @@ def search():
             top_k=topk,
             include_metadata=True
         )
-        
-        print("RAW Pinecone results:", results)
 
         formatted_results = []
         for r in getattr(results, "matches", []):

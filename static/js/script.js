@@ -24,13 +24,25 @@ document.addEventListener("DOMContentLoaded", function () {
             const card = document.createElement("div");
             card.className = "result-card";
 
+            // Split keywords into tags (safe fallback if keyword is missing)
+            let keywordHTML = "N/A";
+            if (item.keyword && typeof item.keyword === "string") {
+                keywordHTML = item.keyword
+                    .split(",")
+                    .map(k => `<span class="keyword-tag">${k.trim()}</span>`)
+                    .join(" ");
+            }
+
             card.innerHTML = `
                 <h3 class="result-title">
                     <a href="${item.arxiv_url}" target="_blank">${item.title}</a>
                 </h3>
-                <p class="result-meta">Category: ${item.category} • Published: ${item.date_published}</p>
+                <p class="result-meta">
+                    <span class="category-badge"> Category:${item.category || "N/A"}</span>
+                    • <span class="published-date">📅 Published: ${item.date_published || "N/A"}</span>
+                </p>
                 <p class="result-abstract">${item.abstract}</p>
-                <p class="result-keywords"><strong>Keywords:</strong> ${item.keyword}</p>
+                <p class="result-keywords"><strong>Keywords:</strong> ${keywordHTML}</p>
                 <div class="result-links">
                     ${item.pdf_url ? `<a href="${item.pdf_url}" target="_blank" class="pdf-btn">📄 View PDF</a>` : ""}
                 </div>
@@ -41,7 +53,6 @@ document.addEventListener("DOMContentLoaded", function () {
             resultsDiv.appendChild(card);
         });
     }
-
 
     function sendQuery() {
         const queryText = queryInput.value.trim();

@@ -137,6 +137,7 @@
   background: #c7d2fe;
   transform: scale(1.05);
 }
+
 /* PDF button */
 .pdf-btn {
   display: inline-block;
@@ -149,7 +150,42 @@
   font-size: 14px;
   transition: background 0.2s ease;
 }
-
 .pdf-btn:hover {
   background-color: #005bb5;
+}
+
+/* Category Badge */
+.category-badge {
+  display: inline-block;
+  background: #fde68a; /* amber */
+  color: #92400e;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-right: 5px;
+}
+
+/* Published Date */
+.published-date {
+  color: #374151;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Keyword Tags */
+.keyword-tag {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  margin: 2px 4px 2px 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.keyword-tag:hover {
+  background: #bae6fd;
+  transform: scale(1.05);
+  cursor: pointer;
 }
