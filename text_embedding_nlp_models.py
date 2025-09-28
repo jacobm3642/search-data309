@@ -4,8 +4,6 @@ from sentence_transformers import SentenceTransformer
 import pandas as pd
 import numpy as np
 
-## Reading in the dataset
-df = pd.read_csv('arxiv_49999_papers(in).csv')
 
 ## Importing the chosen NLP model
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
@@ -22,6 +20,9 @@ def similarities(embedding_list):
 
 ## Creating a main function so that my testing doesn't run automatically!
 def main():
+  ## Reading in the dataset
+  df = pd.read_csv('arxiv_49999_papers(in).csv')
+  
   # Checking how long my code takes to run
   start = time.time()
 

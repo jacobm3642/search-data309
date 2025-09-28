@@ -1,10 +1,8 @@
 from pinecone import Pinecone, ServerlessSpec
+from text_embedding_nlp_models import embed
 
 debug = False
 
-#placeholder
-def embed(string):
-    return [0]
 
 def get_env_parameter(key: str) -> str:
     with open("./.env", "r") as env:
@@ -95,9 +93,6 @@ class Database_handler:
         return self.connected
     
     def _set_index_target(self, target: str) -> None:
-        if not self.pinecone.has_index(target):
-            #TODO replace {} with something
-            self.genrate_index({}, target)
         self.index_target = self.pinecone.Index(self.index)
 
 
@@ -129,31 +124,11 @@ class Database_handler:
         prepared = query.prepare()
         return self.index_target.query(**prepared)
 
-    def upload_vector_set(self, key: dict, records: list) -> bool:
+    def upload_vector(self, record: dict) -> bool:
         if not self.connected:
             self.connect_db()
 
-        id_key = key.get("id", "id")
-        vec_key = key.get("values") or key.get("vector") or key.get("embedding")
-        meta_key = key.get("metadata", "metadata")
-        ns_spec = key.get("namespace", None)
-
-        by_ns: dict[str | None, list[dict]] = {}
-        for rec in records:
-            ns = None
-            if ns_spec is not None:
-                ns = rec[ns_spec] if isinstance(ns_spec, str) and ns_spec in rec else ns_spec
-
-            payload = {
-                "id": str(rec[id_key]),
-                "values": rec[vec_key],
-                "metadata": rec[meta_key],
-            }
-            by_ns.setdefault(ns, []).append(payload)
-
-        for ns, vecs in by_ns.items():
-            self.index_target.upsert(vectors=vecs, namespace=ns)
-
+        self.index_target.upsert(vectors=record)
         return True
 
 

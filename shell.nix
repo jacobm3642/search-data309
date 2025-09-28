@@ -4,7 +4,7 @@ with pkgs;
 
 mkShell {
   buildInputs =  [
-    (python3.withPackages (ps: with ps; [
+    (python311.withPackages (ps: with ps; [
       pip
       pandas
       requests
@@ -15,6 +15,8 @@ mkShell {
       grpcio
       protobuf
       googleapis-common-protos
+      pytorch
+      sentence-transformers
     ]))
 
     protobuf

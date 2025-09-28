@@ -3,8 +3,11 @@
 import sys
 import csv
 from database_integration import *
+from text_embedding_nlp_models import embed
+from collections import Counter
 
 db_handler = Database_handler()
+i = 0
 
 def get_arg():
     if len(sys.argv) > 1:
@@ -12,8 +15,9 @@ def get_arg():
     return None
 
 def process_row(line, col_labels):
+    i += 1
     row = {}
-    #row["vector"] = embeding(line[col_labels.index("abstract_cleaned")])
+    row["vector"] = embeding(line[col_labels.index("abstract_cleaned")])
     row["metadata"] = {"title": line[col_labels.index("title_cleaned")],
                        "abstract": line[col_labels.index("abstract_cleaned")],
                        "keyword": line[col_labels.index("keywords")],
@@ -22,8 +26,8 @@ def process_row(line, col_labels):
                        "category": line[col_labels.index("category")],
                        "date_published": line[col_labels.index("published")],
                        }
-    row["id"] = None #maybe uuidv6 but that might be overkill
-    #db_handler.upload_vector_set(row) # upload_vector_set may need a refactor
+    row["id"] = i
+    db_handler.upload_vector_set(row) # upload_vector_set may need a refactor
     print(row)
 
 def process_csv(filepath):
